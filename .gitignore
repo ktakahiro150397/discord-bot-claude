@@ -1,0 +1,8 @@
+.env
+.env.production
+log/
+__pycache__/
+.DS_Store
+dalle_pics/
+api_generated_files/
+user_upload_files/
