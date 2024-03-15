@@ -10,6 +10,9 @@ import discord
 from dotenv import load_dotenv
 import os
 
+from chatter.chat_interface import chat_interface
+from chatter.claude_opus_chatter import claude_opus_chatter
+
 # 環境変数を読み込み
 load_dotenv()
 
@@ -30,6 +33,8 @@ responseChannelArray = os.getenv("DISCORD_RESPONSE_CHANNEL_ID").split(",")
 responseChannel = [int(val) for val in responseChannelArray]
 logger.info(f"反応対象のチャンネルIDは次の通りです。{responseChannel}")
 
+# チャットクラス
+chatters = claude_opus_chatter()
 
 @client.event
 async def on_ready():
@@ -57,27 +62,23 @@ async def on_message(message):
     # ここで応答処理
     async with message.channel.typing():
         try:
-            await message.channel.send(f"got message! : {message}")
+            response = await chatters.chat(message.channel.id,message.content)
+            await message.channel.send(f"{response}")
         except Exception as e:
             error_message = traceback.format_exc()
             
             logger.error(f"エラーが発生しました。\n{error_message}")
             await message.channel.send(f"エラーが発生しました。\n\n{error_message[-1800:]}")
 
-# @tree.command(name="clear",description="会話履歴をクリアします。")
-# async def clear_thread(interaction:discord.Interaction):
-#     await interaction.response.defer()
+@tree.command(name="clear",description="会話履歴をクリアします。")
+async def clear_thread(interaction:discord.Interaction):
+    await interaction.response.defer()
 
-#     logger.debug(f"Called : {sys._getframe().f_code.co_name}")
-#     logger.debug(f"interaction:{interaction}")
+    logger.debug(f"Called : {sys._getframe().f_code.co_name}")
+    logger.debug(f"interaction:{interaction}")
 
-#     if interaction.channel_id not in assistants:
-#         await interaction.followup.send(content="履歴をクリアしました。")
-#         return
-    
-#     assistant = assistants[interaction.channel_id]
-#     await assistant.clear()
-#     await interaction.followup.send(content="履歴をクリアしました。")
+    response = await chatters.clear_history(interaction.channel.id)
+    await interaction.followup.send(content=response)
 
 # クライアントを実行
 discord.utils.setup_logging()
