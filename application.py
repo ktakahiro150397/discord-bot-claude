@@ -12,6 +12,7 @@ import os
 
 from chatter.chat_interface import chat_interface
 from chatter.claude_opus_chatter import ClaudeOpusChatter
+from discord_helper import discord_helper
 
 # 環境変数を読み込み
 load_dotenv()
@@ -68,13 +69,25 @@ async def on_message(message):
     # ここで応答処理
     async with message.channel.typing():
         try:
-            response = await chatters.chat(message.channel.id,message.content)
-            await message.channel.send(f"{response}")
+            # # 同期版
+            # response = await chatters.chat(message.channel.id,message.content)
+            # await message.channel.send(f"{response}")
+
+            # ストリーム版
+            stream = await chatters.chat_stream(message.channel.id,message.content)
+
+            # ストリーム内容を送信
+            response = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
+            
         except Exception as e:
             error_message = traceback.format_exc()
             
             logger.error(f"エラーが発生しました。\n{error_message}")
             await message.channel.send(f"エラーが発生しました。\n\n{error_message[-1800:]}")
+
+    # 履歴を追加
+    chatters.add_history(message.channel.id,role="assistant",message=response)
+
 
 @tree.command(name="clear",description="会話履歴をクリアします。")
 async def clear_thread(interaction:discord.Interaction):
