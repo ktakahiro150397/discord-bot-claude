@@ -1,5 +1,7 @@
+from pathlib import Path
 from typing import AsyncIterator
 
+import aiohttp
 import discord
 
 
@@ -36,3 +38,15 @@ class discord_helper:
             await discordMessage.edit(content=full_message)
 
         return full_message
+
+    async def get_file_from_url(url:str,temp_file_path:str) -> Path:
+        # ファイルをダウンロード
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    raise Exception(f"GET {url} failed with status {resp.status}")
+                data = await resp.read()
+                with open(temp_file_path, "wb") as f:
+                    f.write(data)
+
+        return Path(temp_file_path)

@@ -1,6 +1,8 @@
 import asyncio
+from datetime import datetime
 import json
 from logging import config, getLogger
+from pathlib import Path
 import sys
 import traceback
 from typing import Sequence
@@ -73,20 +75,30 @@ async def on_message(message):
             # response = await chatters.chat(message.channel.id,message.content)
             # await message.channel.send(f"{response}")
 
+            # 添付ファイルあればダウンロード
+            attachments:list[Path] = []
+            
+            for attachment in message.attachments:
+                file_prefix = datetime.now().strftime("%Y%m%d%H%M%S")
+                temp_file_path = f"user_upload_files/{file_prefix}_{attachment.filename}"
+                file_path = await discord_helper.get_file_from_url(attachment.url,temp_file_path)
+                attachments.append(file_path)
+            
+
             # ストリーム版
             stream = await chatters.chat_stream(message.channel.id,message.content)
 
-            # ストリーム内容を送信
-            response = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
-            
+            # # ストリーム内容を送信
+            # response = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
+
         except Exception as e:
             error_message = traceback.format_exc()
             
             logger.error(f"エラーが発生しました。\n{error_message}")
             await message.channel.send(f"エラーが発生しました。\n\n{error_message[-1800:]}")
 
-    # 履歴を追加
-    chatters.add_history(message.channel.id,role="assistant",message=response)
+    # # 履歴を追加
+    # chatters.add_history(message.channel.id,role="assistant",message=response)
 
 
 @tree.command(name="clear",description="会話履歴をクリアします。")
