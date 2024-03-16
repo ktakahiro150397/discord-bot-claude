@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import os
 
 from chatter.chat_interface import chat_interface
-from chatter.claude_opus_chatter import claude_opus_chatter
+from chatter.claude_opus_chatter import ClaudeOpusChatter
 
 # 環境変数を読み込み
 load_dotenv()
@@ -34,7 +34,7 @@ responseChannel = [int(val) for val in responseChannelArray]
 logger.info(f"反応対象のチャンネルIDは次の通りです。{responseChannel}")
 
 # チャットクラス
-chatters = claude_opus_chatter(api_key=os.getenv("ANTHROPIC_API_KEY"))
+chatters = ClaudeOpusChatter(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 @client.event
 async def on_ready():
