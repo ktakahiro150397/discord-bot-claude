@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from datetime import datetime
 import json
 from logging import config, getLogger
@@ -83,13 +84,27 @@ async def on_message(message):
                 temp_file_path = f"user_upload_files/{file_prefix}_{attachment.filename}"
                 file_path = await discord_helper.get_file_from_url(attachment.url,temp_file_path)
                 attachments.append(file_path)
-            
+
+            # ファイル添付サイズ確認
+            isExceed = False
+            exceedFileName:list[str] = []
+            for attachment in attachments:
+                with open(attachment, "rb") as image_file:
+                    encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+                
+                    if len(encoded_string) > 5242880:
+                        exceedFileName.append(attachment.name)
+                        isExceed = True
+
+            if isExceed:
+                await message.channel.send(f"ファイルサイズが5MBを超えるため、送信できませんでした。\n\n{exceedFileName}")
+                return
 
             # ストリーム版
-            stream = await chatters.chat_stream(message.channel.id,message.content)
+            stream = await chatters.chat_stream(message.channel.id,message.content,files=attachments)
 
-            # # ストリーム内容を送信
-            # response = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
+            # ストリーム内容を送信
+            response = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -97,8 +112,8 @@ async def on_message(message):
             logger.error(f"エラーが発生しました。\n{error_message}")
             await message.channel.send(f"エラーが発生しました。\n\n{error_message[-1800:]}")
 
-    # # 履歴を追加
-    # chatters.add_history(message.channel.id,role="assistant",message=response)
+    # 履歴を追加
+    chatters.add_history(message.channel.id,role="assistant",message=response)
 
 
 @tree.command(name="clear",description="会話履歴をクリアします。")

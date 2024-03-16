@@ -33,7 +33,7 @@ class ClaudeOpusChatter(chat_interface):
         self.__add_client(memory_id)
         
         # メッセージ追加
-        self.contents[memory_id].AddItem(role="user",content=message)
+        self.contents[memory_id].AddContent(role="user",text=message)
         
         # Claudeから返答を取得
         message = await self.clients[memory_id].messages.create(
@@ -45,7 +45,7 @@ class ClaudeOpusChatter(chat_interface):
         )
         
         # 返答を追加
-        self.contents[memory_id].AddItem(role="assistant",content=message.content[0].text)
+        self.contents[memory_id].AddTextContent(role="assistant",content=message.content[0].text)
         
         return message.content[0].text
     
@@ -53,28 +53,14 @@ class ClaudeOpusChatter(chat_interface):
         self.__add_client(memory_id)
 
         # メッセージ追加
-        self.contents[memory_id].AddItem(role="user",content=message)
+        self.contents[memory_id].AddContent(role="user",text=message,file_name_list=files)
 
-        # response_message = ""
-        # async with self.clients[memory_id].messages.stream(
-        #         max_tokens=self.max_tokens,
-        #         temperature=self.temperature,
-        #         messages=self.contents[memory_id].GetSendMessage(),
-        #         model="claude-3-opus-20240229",
-        #     ) as stream:
-        #         async for text in stream.text_stream:
-        #             print(text, end="", flush=True)
-        #         print()
-
-        #         response_message = await stream.get_final_message()
-        #         print(response_message.model_dump_json(indent=2))
-
-        # self.contents[memory_id].AddItem(role="assistant",content=response_message)
+        message = self.contents[memory_id].GetSendMessage()
 
         stream = await self.clients[memory_id].messages.stream(
             max_tokens=self.max_tokens,
             temperature=self.temperature,
-            messages=self.contents[memory_id].GetSendMessage(),
+            messages=message,
             model="claude-3-opus-20240229",
             system=self.system_role,
         ).__aenter__()
@@ -83,7 +69,7 @@ class ClaudeOpusChatter(chat_interface):
     
     def add_history(self,memory_id:str,role:str,message:str)->None:
         self.__add_client(memory_id)
-        self.contents[memory_id].AddItem(role=role,content=message)
+        self.contents[memory_id].AddContent(role=role,text=message)
     
     async def clear_history(self,memory_id:str)->str:
         self.__add_client(memory_id)
