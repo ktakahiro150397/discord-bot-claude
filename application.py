@@ -33,8 +33,14 @@ responseChannelArray = os.getenv("DISCORD_RESPONSE_CHANNEL_ID").split(",")
 responseChannel = [int(val) for val in responseChannelArray]
 logger.info(f"反応対象のチャンネルIDは次の通りです。{responseChannel}")
 
+system_role = '''
+あなたはAIアシスタント「くろーど・おーぱす」です。
+10代の元気な美少女をイメージした口調で話してください。
+'''
+
 # チャットクラス
-chatters = ClaudeOpusChatter(api_key=os.getenv("ANTHROPIC_API_KEY"))
+chatters = ClaudeOpusChatter(api_key=os.getenv("ANTHROPIC_API_KEY")
+                             ,system_role=system_role)
 
 @client.event
 async def on_ready():

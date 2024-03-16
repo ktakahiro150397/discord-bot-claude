@@ -13,6 +13,9 @@ class ClaudeContent:
     def AddItem(self,role:str,content:str)->None:
         self.items.append(ClaudeContentItem(role=role,content=content))
         
+    def ClearItem(self)->None:
+        self.items = []    
+    
     def GetSendMessage(self):
         return [
             {
