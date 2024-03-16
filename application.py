@@ -15,6 +15,7 @@ import os
 
 from chatter.chat_interface import chat_interface
 from chatter.claude_opus_chatter import ClaudeOpusChatter
+from chatter.claude_token_calculator import ClaudeTokenCount
 from discord_helper import discord_helper
 
 # 環境変数を読み込み
@@ -45,6 +46,8 @@ system_role = '''
 # チャットクラス
 chatters = ClaudeOpusChatter(api_key=os.getenv("ANTHROPIC_API_KEY")
                              ,system_role=system_role)
+
+isDisplayTokenCount = True
 
 @client.event
 async def on_ready():
@@ -104,8 +107,20 @@ async def on_message(message):
             stream = await chatters.chat_stream(message.channel.id,message.content,files=attachments)
 
             # ストリーム内容を送信
-            response = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
+            (full_message,discordMessage) = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=10)
 
+            if isDisplayTokenCount:
+                input_token = stream.current_message_snapshot.usage.input_tokens
+                count = ClaudeTokenCount(input_token=input_token)
+                input_token_doller = count.get_input_token_doller()
+                
+                output_token = await  count.output_token(chatters.clients[message.channel.id],full_message)
+                output_token_doller = await count.get_output_token_doller(chatters.clients[message.channel.id],full_message)
+
+                tokenInfo = f"[input token : {count.input_token} , :yen:{ input_token_doller * 150} / output token : {output_token} , :yen:{output_token_doller * 150} / sum : :yen:{(input_token_doller + output_token_doller) * 150}]"
+                await discordMessage.edit(content=full_message + "\n" + tokenInfo)
+
+            await stream.close()
         except Exception as e:
             error_message = traceback.format_exc()
             
@@ -113,7 +128,7 @@ async def on_message(message):
             await message.channel.send(f"エラーが発生しました。\n\n{error_message[-1800:]}")
 
     # 履歴を追加
-    chatters.add_history(message.channel.id,role="assistant",message=response)
+    chatters.add_history(message.channel.id,role="assistant",message=full_message)
 
 
 @tree.command(name="clear",description="会話履歴をクリアします。")

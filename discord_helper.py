@@ -3,13 +3,14 @@ from typing import AsyncIterator
 
 import aiohttp
 import discord
+from discord import Message
 
 
 class discord_helper:
 
     async def send_message_streaming(message_channel:discord.TextChannel,
                                      stream:AsyncIterator[str],
-                                     sendCount:int=10) -> str:
+                                     sendCount:int=10):
         
 
         hasFirstMessageSend = False
@@ -37,7 +38,7 @@ class discord_helper:
         else:
             await discordMessage.edit(content=full_message)
 
-        return full_message
+        return (full_message,discordMessage)
 
     async def get_file_from_url(url:str,temp_file_path:str) -> Path:
         # ファイルをダウンロード
