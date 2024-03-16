@@ -6,35 +6,24 @@ import os
 from anthropic import Anthropic
 
 class claude_opus_chatter(chat_interface):
-    def __init(self,apiKey:str)->None:
+    def __init__(self,api_key:str)->None:
         self.clients:Dict[str,Anthropic] = {}
 
-        self.apiKey = apiKey
-
-    def add_client_before_process(f):
-        def _wrapper(*args,**kwargs):
-            print("add_client_before_process called!")
-
-            v = f(*args,**kwargs)
-
-            # print("add_client_before_process finished!")
-
-            return v
-        return _wrapper
+        self.api_key = api_key
 
     def __add_client(self,id:str)->None:
         if id not in self.clients:
-            self.clients[id] = Anthropic(apiKey=self.apiKey)
+            self.clients[id] = Anthropic(api_key=self.api_key)
 
-    @add_client_before_process
     async def chat(self,id:str,message:str)->str:
+        self.__add_client(id)
         return f"chat called! / id:{id} / message : {message}"
     
-    @add_client_before_process
     async def chat_stream(self,id:str,message:str,files:List[Path]=[])->None:
+        self.__add_client(id)
         return f"chat_stream called! / id:{id} / message : {message}"
     
-    @add_client_before_process
     async def clear_history(self,id:str)->None:
+        self.__add_client(id)
         return f"clear_history called! / id:{id}"
     

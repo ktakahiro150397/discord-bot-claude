@@ -34,7 +34,7 @@ responseChannel = [int(val) for val in responseChannelArray]
 logger.info(f"反応対象のチャンネルIDは次の通りです。{responseChannel}")
 
 # チャットクラス
-chatters = claude_opus_chatter()
+chatters = claude_opus_chatter(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 @client.event
 async def on_ready():
