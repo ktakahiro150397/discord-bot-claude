@@ -49,6 +49,16 @@ chatters = ClaudeOpusChatter(api_key=os.getenv("ANTHROPIC_API_KEY")
 
 isDisplayTokenCount = True
 
+
+async def test_text_stream(text_count:int):
+    for i in range(text_count):
+        if i % 30 == 0:
+            yield f"{[i]}"
+        else:
+            yield f"{[i]}" + "```"
+
+
+
 @client.event
 async def on_ready():
     logger.debug(f"Called : {sys._getframe().f_code.co_name}")
@@ -104,23 +114,24 @@ async def on_message(message):
                 return
 
             # ストリーム版
-            stream = await chatters.chat_stream(message.channel.id,message.content,files=attachments)
+            stream = test_text_stream(100)
+            # stream = await chatters.chat_stream(message.channel.id,message.content,files=attachments)
 
             # ストリーム内容を送信
-            (full_message,discordMessage) = await discord_helper.send_message_streaming(message.channel,stream.text_stream,sendCount=30)
+            (full_message,discordMessage) = await discord_helper.send_message_streaming(message.channel,stream,sendCount=5)
 
-            if isDisplayTokenCount:
-                input_token = stream.current_message_snapshot.usage.input_tokens
-                count = ClaudeTokenCount(input_token=input_token)
-                input_token_doller = count.get_input_token_doller()
+            # if isDisplayTokenCount:
+            #     input_token = stream.current_message_snapshot.usage.input_tokens
+            #     count = ClaudeTokenCount(input_token=input_token)
+            #     input_token_doller = count.get_input_token_doller()
                 
-                output_token = await  count.output_token(chatters.clients[message.channel.id],full_message)
-                output_token_doller = await count.get_output_token_doller(chatters.clients[message.channel.id],full_message)
+            #     output_token = await  count.output_token(chatters.clients[message.channel.id],full_message)
+            #     output_token_doller = await count.get_output_token_doller(chatters.clients[message.channel.id],full_message)
 
-                tokenInfo = f"[input token : {count.input_token} , :yen:{ input_token_doller * 150} / output token : {output_token} , :yen:{output_token_doller * 150} / sum : :yen:{(input_token_doller + output_token_doller) * 150}]"
-                await discordMessage.edit(content=full_message + "\n" + tokenInfo)
+            #     tokenInfo = f"[input token : {count.input_token} , :yen:{ input_token_doller * 150} / output token : {output_token} , :yen:{output_token_doller * 150} / sum : :yen:{(input_token_doller + output_token_doller) * 150}]"
+            #     await discordMessage.edit(content=full_message + "\n" + tokenInfo)
 
-            await stream.close()
+            # await stream.close()
         except Exception as e:
             error_message = traceback.format_exc()
             
@@ -145,3 +156,5 @@ async def clear_thread(interaction:discord.Interaction):
 discord.utils.setup_logging()
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 client.run(DISCORD_BOT_TOKEN)
+
+
