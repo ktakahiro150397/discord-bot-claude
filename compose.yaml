@@ -1,0 +1,11 @@
+version: '3'
+services:
+  chatbot:
+    image: discord-claude:latest
+    container_name: discord-claude
+    volumes:
+      - ~/log/discord-claude:/app/log
+    environment:
+      - ANTHROPIC_API_KEY=WriteAnthoropicApiKeyHere!
+      - DISCORD_BOT_TOKEN=AddTokenHere!
+      - DISCORD_RESPONSE_CHANNEL_ID=WriteChannelIdHere!(SeparatedByComma)

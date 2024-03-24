@@ -8,13 +8,13 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-RUN conda create -n discord-claude --file discord-claude.txt
+# Create a log directory
+RUN mkdir log
+RUN chmod 777 log
 
 # Install any needed packages specified in requirements.txt
+RUN conda create -n discord-claude --file discord-claude.txt
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
-# RUN conda init
-
-# RUN conda activate discord-claude
-
+# run the command to start up the application
 CMD python application.py
